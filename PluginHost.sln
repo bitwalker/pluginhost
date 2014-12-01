@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.31101.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PluginHost", "PluginHost\PluginHost.csproj", "{80D7D5EF-F856-4A55-840B-0D07E7FD1718}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PluginHost.Interface", "PluginHost.Interface\PluginHost.Interface.csproj", "{19B4A837-8E9A-47DC-8A59-1C8A39C42537}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{80D7D5EF-F856-4A55-840B-0D07E7FD1718}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{80D7D5EF-F856-4A55-840B-0D07E7FD1718}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{80D7D5EF-F856-4A55-840B-0D07E7FD1718}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{80D7D5EF-F856-4A55-840B-0D07E7FD1718}.Release|Any CPU.Build.0 = Release|Any CPU
+		{19B4A837-8E9A-47DC-8A59-1C8A39C42537}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{19B4A837-8E9A-47DC-8A59-1C8A39C42537}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{19B4A837-8E9A-47DC-8A59-1C8A39C42537}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{19B4A837-8E9A-47DC-8A59-1C8A39C42537}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
