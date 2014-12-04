@@ -37,6 +37,19 @@
     <Reference Include="System.ComponentModel.Composition.Registration" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Reactive.Core">
+      <HintPath>..\packages\Rx-Core.2.2.5\lib\net45\System.Reactive.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.Interfaces">
+      <HintPath>..\packages\Rx-Interfaces.2.2.5\lib\net45\System.Reactive.Interfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.Linq">
+      <HintPath>..\packages\Rx-Linq.2.2.5\lib\net45\System.Reactive.Linq.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.PlatformServices">
+      <HintPath>..\packages\Rx-PlatformServices.2.2.5\lib\net45\System.Reactive.PlatformServices.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reflection.Context" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -45,11 +58,25 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Configuration\Config.cs" />
+    <Compile Include="Configuration\Elements\PathElement.cs" />
+    <Compile Include="Configuration\Elements\PathsElement.cs" />
     <Compile Include="Configuration\IConfig.cs" />
+    <Compile Include="Dependencies\ExportChangeType.cs" />
+    <Compile Include="Helpers\DirectoryWatcher\FileChangedEventArgs.cs" />
+    <Compile Include="Helpers\DirectoryWatcher\DirectoryWatcher.cs" />
+    <Compile Include="Helpers\DirectoryWatcher\FileChangedEvent.cs" />
+    <Compile Include="Dependencies\ExportChangedEventArgs.cs" />
+    <Compile Include="Logging\ConsoleLogger.cs" />
+    <Compile Include="Logging\EventLogLogger.cs" />
+    <Compile Include="Logging\LogLevel.cs" />
+    <Compile Include="Dependencies\DependencyInjector.cs" />
     <Compile Include="Program.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Tasks\EventLoop.cs" />
+    <Compile Include="Tasks\EventBus.cs" />
+    <Compile Include="Tasks\TaskManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -59,8 +86,18 @@
     <None Include="App.Release.config">
       <DependentUpon>App.config</DependentUpon>
     </None>
+    <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\PluginHost.Extensions\PluginHost.Extensions.csproj">
+      <Project>{653947de-dfc6-4327-9aaa-c9eb494bfff2}</Project>
+      <Name>PluginHost.Extensions</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\PluginHost.Interface\PluginHost.Interface.csproj">
+      <Project>{19b4a837-8e9a-47dc-8a59-1c8a39c42537}</Project>
+      <Name>PluginHost.Interface</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

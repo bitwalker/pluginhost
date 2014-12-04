@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PluginHost", "PluginHost\Pl
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PluginHost.Interface", "PluginHost.Interface\PluginHost.Interface.csproj", "{19B4A837-8E9A-47DC-8A59-1C8A39C42537}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PluginHost.Extensions", "PluginHost.Extensions\PluginHost.Extensions.csproj", "{653947DE-DFC6-4327-9AAA-C9EB494BFFF2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{19B4A837-8E9A-47DC-8A59-1C8A39C42537}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{19B4A837-8E9A-47DC-8A59-1C8A39C42537}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{19B4A837-8E9A-47DC-8A59-1C8A39C42537}.Release|Any CPU.Build.0 = Release|Any CPU
+		{653947DE-DFC6-4327-9AAA-C9EB494BFFF2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{653947DE-DFC6-4327-9AAA-C9EB494BFFF2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{653947DE-DFC6-4327-9AAA-C9EB494BFFF2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{653947DE-DFC6-4327-9AAA-C9EB494BFFF2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
