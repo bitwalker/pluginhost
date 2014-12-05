@@ -36,43 +36,20 @@ namespace PluginHost.Interface.Tasks
             _quiet = quiet;
         }
 
+        /// <summary>
+        /// Initialize this task for execution
+        /// </summary>
+        public abstract void Init();
+
+        /// <summary>
+        /// Start executing this task
+        /// </summary>
         public virtual void Start()
         {
             IsStarted = true;
             // Subscribe to events of type T
             _subscription = EventBus.Subscribe(this);
         }
-
-        public void OnNext(T value)
-        {
-            if (_shuttingDown)
-                return;
-
-            if (!_quiet)
-            {
-                var isoDate = DateTime.UtcNow.ToISO8601z();
-                Logger.Info("{0} - Executing: {1}", isoDate, _description);
-            }
-
-            IsExecuting = true;
-            Execute();
-            IsExecuting = false;
-        }
-
-        public void OnError(Exception error)
-        {
-            Logger.Error(error);
-        }
-
-        public void OnCompleted()
-        {
-            Stop(true);
-        }
-
-        /// <summary>
-        /// Initialize this task for execution
-        /// </summary>
-        public abstract void Init();
 
         /// <summary>
         /// Executes the workload for this scheduled task.
@@ -91,11 +68,56 @@ namespace PluginHost.Interface.Tasks
             if (_shuttingDown)
                 return;
 
-            IsStarted   = false;
+            IsStarted = false;
             IsExecuting = false;
 
             _shuttingDown = true;
             _subscription.Dispose();
+
+            Kill(brutalKill);
+        }
+
+        /// <summary>
+        /// Called when this task is being shutdown.
+        /// </summary>
+        /// <param name="brutalKill">Whether this shutdown should be expedited or not.</param>
+        protected abstract void Kill(bool brutalKill);
+
+        /// <summary>
+        /// Called for every event in the event stream this task subscribes to
+        /// </summary>
+        /// <param name="value">The value of the event</param>
+        public void OnNext(T value)
+        {
+            if (_shuttingDown)
+                return;
+
+            if (!_quiet)
+            {
+                var isoDate = DateTime.UtcNow.ToISO8601z();
+                Logger.Info("{0} - Executing: {1}", isoDate, _description);
+            }
+
+            IsExecuting = true;
+            Execute();
+            IsExecuting = false;
+        }
+
+        /// <summary>
+        /// Called for any error produced by the event stream
+        /// </summary>
+        /// <param name="error"></param>
+        public void OnError(Exception error)
+        {
+            Logger.Error(error);
+        }
+
+        /// <summary>
+        /// Called when the event stream stops publishing
+        /// </summary>
+        public void OnCompleted()
+        {
+            Stop(true);
         }
     }
 }

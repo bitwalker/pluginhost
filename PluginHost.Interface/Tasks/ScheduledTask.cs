@@ -38,6 +38,14 @@ namespace PluginHost.Interface.Tasks
             _quiet = quiet;
         }
 
+        /// <summary>
+        /// Initialize this task for execution
+        /// </summary>
+        public abstract void Init();
+
+        /// <summary>
+        /// Start executing this task
+        /// </summary>
         public virtual void Start()
         {
             IsStarted = true;
@@ -46,6 +54,39 @@ namespace PluginHost.Interface.Tasks
             _subscription = EventBus.Subscribe(this, ticks => ticks.Sample(_interval));
         }
 
+        /// <summary>
+        /// Executes the workload for this scheduled task.
+        /// </summary>
+        protected abstract void Execute();
+
+        /// <summary>
+        /// Called when this task should be stopped.
+        /// </summary>
+        /// <param name="brutalKill">Whether the task should be killed or not</param>
+        public virtual void Stop(bool brutalKill)
+        {
+            if (_shuttingDown)
+                return;
+
+            IsStarted = false;
+            IsExecuting = false;
+
+            _shuttingDown = true;
+            _subscription.Dispose();
+
+            Kill(brutalKill);
+        }
+
+        /// <summary>
+        /// Called when this task is being shutdown.
+        /// </summary>
+        /// <param name="brutalKill">Whether this shutdown should be expedited or not.</param>
+        protected abstract void Kill(bool brutalKill);
+
+        /// <summary>
+        /// Called for every event in the event stream this task has subscribed to
+        /// </summary>
+        /// <param name="value">The value of the event</param>
         public void OnNext(Tick value)
         {
             if (_shuttingDown)
@@ -62,43 +103,21 @@ namespace PluginHost.Interface.Tasks
             IsExecuting = false;
         }
 
+        /// <summary>
+        /// Called when the event stream produces an error
+        /// </summary>
+        /// <param name="error"></param>
         public void OnError(Exception error)
         {
             Logger.Error(error);
         }
 
+        /// <summary>
+        /// Called when the event stream stops publishing
+        /// </summary>
         public void OnCompleted()
         {
             Stop(true);
-        }
-
-        /// <summary>
-        /// Initialize this task for execution
-        /// </summary>
-        public abstract void Init();
-
-        /// <summary>
-        /// Executes the workload for this scheduled task.
-        /// </summary>
-        /// <returns></returns>
-        protected abstract void Execute();
-
-        /// <summary>
-        /// Called when this task should be stopped.
-        /// Ensure you call base.Stop in your implementation, to make
-        /// sure the instance is fully cleaned up.
-        /// </summary>
-        /// <param name="brutalKill">Whether the task should be killed or not</param>
-        public virtual void Stop(bool brutalKill)
-        {
-            if (_shuttingDown)
-                return;
-
-            IsStarted   = false;
-            IsExecuting = false;
-
-            _shuttingDown = true;
-            _subscription.Dispose();
         }
     }
 }

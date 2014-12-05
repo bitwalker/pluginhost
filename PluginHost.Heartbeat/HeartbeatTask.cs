@@ -30,5 +30,11 @@ namespace PluginHost.Heartbeat
             var isoDate = DateTime.UtcNow.ToISO8601z();
             Logger.Info("{0} - All systems normal.", isoDate);
         }
+
+        protected override void Kill(bool brutalKill)
+        {
+            var isoDate = DateTime.UtcNow.ToISO8601z();
+            Logger.Info("{0} - Heartbeat stopped.");
+        }
     }
 }
