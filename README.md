@@ -4,6 +4,26 @@ This project is a proof-of-concept for an application which provides
 runtime extensibility via plugins. This application is written in C#,
 using .NET v4.5, and is composed of the following components:
 
+## Usage
+
+Simply clone the repository, open in Visual Studio and build the solution. Make sure
+PluginHost is set as the startup project, and run the debugger. From here you can type
+`help` and press Enter to execute the command and view a list of available commands.
+
+By default, PluginHost has no tasks bundled, so we need to add one. I've added the
+PluginHost.Heartbeat project for this purpose. To test the runtime detection and execution
+of tasks, perform the following steps while PluginHost is running:
+
+- In the console, type `start` followed by Enter
+- Go to the PluginHost.Hearbeat project, locate the `bin\Debug` folder, and copy the
+  `PluginHost.Hearbeat.dll` file to `PluginHost\bin\Debug`.
+
+You should see logging messages in the console reflecting the detection of the new assembly
+and associated tasks, and start up messages for the Heartbeat task. After a few seconds you
+should start seeing the heartbeat message logged to the console.
+
+To exit, just type `exit` and press Enter.
+
 ## Components
 
 ### PluginHost

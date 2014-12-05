@@ -85,6 +85,7 @@
     <Compile Include="Tasks\EventLoop.cs" />
     <Compile Include="Tasks\EventBus.cs" />
     <Compile Include="Tasks\IEventLoop.cs" />
+    <Compile Include="Tasks\ITaskManager.cs" />
     <Compile Include="Tasks\TaskManager.cs" />
     <Compile Include="Tasks\TaskMetadata.cs" />
   </ItemGroup>

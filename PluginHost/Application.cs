@@ -18,7 +18,7 @@ namespace PluginHost
         private ILogger _logger;
         private IDisposable _exportsChangedSubscription;
 
-        internal TaskManager Tasks;
+        internal ITaskManager Tasks;
 
         public void Init()
         {
@@ -29,11 +29,7 @@ namespace PluginHost
                 Config.Current.Paths.Plugins.Info.Create();
 
             _logger = DependencyInjector.Current.Resolve<ILogger>();
-
-            var tasks = DependencyInjector.Current
-                .LazyResolveMany<ITask, IDictionary<string, object>>();
-
-            Tasks = new TaskManager(tasks, _logger);
+            Tasks   = DependencyInjector.Current.Resolve<ITaskManager>();
 
             _exportsChangedSubscription = DependencyInjector.Current.ExportChanged
                 .Where(e => e.Metadata.ContainsKey(TaskManager.TaskNameMetadataKey))

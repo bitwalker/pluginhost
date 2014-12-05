@@ -162,6 +162,9 @@ namespace PluginHost.Dependencies
             builder.ForTypesDerivedFrom<IEventLoop>()
                 .SetCreationPolicy(CreationPolicy.Shared)
                 .Export<IEventLoop>();
+            builder.ForType<TaskManager>()
+                .SetCreationPolicy(CreationPolicy.Shared)
+                .Export<ITaskManager>();
             builder.ForTypesDerivedFrom<ITask>()
                 .Export<ITask>(b =>
                     b.AddMetadata(TaskManager.TaskNameMetadataKey, t => new TaskMetadata(t.Name))

@@ -11,7 +11,7 @@ namespace PluginHost.Tasks
     /// <summary>
     /// Primary entry point for all plugin-based tasks in the PluginHost application.
     /// </summary>
-    public class TaskManager
+    public class TaskManager : ITaskManager
     {
         public const string TaskNameMetadataKey = "TaskName";
 
@@ -30,9 +30,9 @@ namespace PluginHost.Tasks
 
             foreach (var task in tasks)
             {
-                if (task.Metadata.ContainsKey(TaskNameMetadataKey))
+                if (task.Metadata.ContainsKey(TaskManager.TaskNameMetadataKey))
                 {
-                    var taskMeta = task.Metadata[TaskNameMetadataKey] as TaskMetadata;
+                    var taskMeta = task.Metadata[TaskManager.TaskNameMetadataKey] as TaskMetadata;
                     if (taskMeta == null || taskMeta.Name == null)
                         continue;
 
@@ -128,10 +128,18 @@ namespace PluginHost.Tasks
             if (!_started || _shuttingDown)
                 return;
 
+            // Set flags
             _shuttingDown = true;
             _started      = false;
 
+            // Stop publishing events
             _eventLoop.Stop(true);
+
+            // Stop all tasks
+            foreach (var _task in _tasks)
+            {
+                _task.Value.Stop(brutalKill: true);
+            }
         }
 
         public void InitTask(string taskName)
