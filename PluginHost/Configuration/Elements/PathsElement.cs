@@ -4,27 +4,65 @@ namespace PluginHost.Configuration.Elements
 {
     public interface IPathsElement
     {
-        IPathElement Plugins { get; set; }
-        IPathElement LocalStorage { get; set; }
+        PathElement Plugins { get; }
+        PathElement LocalStorage { get; }
     }
 
-    public class PathsElement : ConfigurationElement
+    [ConfigurationCollection(typeof(PathElement), AddItemName = "path", CollectionType = ConfigurationElementCollectionType.BasicMap)]
+    public class PathsElement : ConfigurationElementCollection, IPathsElement
     {
-        [ConfigurationProperty("plugins", DefaultValue = "Plugins", IsRequired = false)]
-        public IPathElement Plugins
+        public override ConfigurationElementCollectionType CollectionType
         {
-            get { return (PathElement) this["plugins"]; }
-            set { this["plugins"] = value; }
+            get { return ConfigurationElementCollectionType.BasicMap; }
+        }
+
+        protected override string ElementName
+        {
+            get { return "path"; }
+        }
+
+        protected override ConfigurationElement CreateNewElement()
+        {
+            return new PathElement();
+        }
+
+        protected override object GetElementKey(ConfigurationElement element)
+        {
+            return (element as PathElement).Name;
+        }
+
+        public PathElement this[int index]
+        {
+            get { return (PathElement) base.BaseGet(index); }
+            set
+            {
+                if (base.BaseGet(index) != null)
+                {
+                    base.BaseRemoveAt(index);
+                }
+                base.BaseAdd(index, value);
+            }
+        }
+
+        public PathElement this[string name]
+        {
+            get { return (PathElement) base.BaseGet(name); }
+        }
+
+        /// <summary>
+        /// Path where plugins are located.
+        /// </summary>
+        public PathElement Plugins
+        {
+            get { return this["plugins"]; }
         }
 
         /// <summary>
         /// Path where locally stored files should be kept.
         /// </summary>
-        [ConfigurationProperty("localStorage", DefaultValue = "LocalStorage", IsRequired = false)]
-        public IPathElement LocalStorage
+        public PathElement LocalStorage
         {
-            get { return (PathElement) this["localStorage"]; }
-            set { this["localStorage"] = value; }
+            get { return this["localStorage"]; }
         }
     }
 }

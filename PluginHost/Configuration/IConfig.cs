@@ -7,6 +7,6 @@ namespace PluginHost.Configuration
         /// <summary>
         /// All directory path configuration for this application
         /// </summary>
-        IPathsElement Paths { get; set; }
+        PathsElement Paths { get; set; }
     }
 }

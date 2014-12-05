@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PluginHost.Interface", "Plu
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PluginHost.Extensions", "PluginHost.Extensions\PluginHost.Extensions.csproj", "{653947DE-DFC6-4327-9AAA-C9EB494BFFF2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PluginHost.Heartbeat", "PluginHost.Heartbeat\PluginHost.Heartbeat.csproj", "{58513877-F118-4FEC-ABE3-6A34D0111BF8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{653947DE-DFC6-4327-9AAA-C9EB494BFFF2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{653947DE-DFC6-4327-9AAA-C9EB494BFFF2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{653947DE-DFC6-4327-9AAA-C9EB494BFFF2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{58513877-F118-4FEC-ABE3-6A34D0111BF8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{58513877-F118-4FEC-ABE3-6A34D0111BF8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{58513877-F118-4FEC-ABE3-6A34D0111BF8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{58513877-F118-4FEC-ABE3-6A34D0111BF8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

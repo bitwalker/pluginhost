@@ -17,17 +17,28 @@ namespace PluginHost.Interface.Tasks
         private bool _shuttingDown = false;
         private IDisposable _subscription;
         private readonly string _description;
+        private readonly bool _quiet;
 
-        public IEventBus EventBus { get; set; }
-        public ILogger Logger { get; set; }
+        public abstract bool IsInitialized { get; protected set; }
+        public bool IsStarted { get; private set; }
+        public bool IsExecuting { get; private set; }
+        protected abstract IEventBus EventBus { get; set; }
+        protected abstract ILogger Logger { get; set; }
 
-        protected ObserverTask(string description)
+        /// <summary>
+        /// Initializes a new observer task
+        /// </summary>
+        /// <param name="description">The text description for this task</param>
+        /// <param name="quiet">Whether or not the base class should do any logging</param>
+        protected ObserverTask(string description, bool quiet = false)
         {
             _description = description;
+            _quiet = quiet;
         }
 
         public virtual void Start()
         {
+            IsStarted = true;
             // Subscribe to events of type T
             _subscription = EventBus.Subscribe(this);
         }
@@ -37,9 +48,15 @@ namespace PluginHost.Interface.Tasks
             if (_shuttingDown)
                 return;
 
-            var isoDate = DateTime.UtcNow.ToISO8601z();
-            Logger.Info("{0} - Executing: {1}", isoDate, _description);
+            if (!_quiet)
+            {
+                var isoDate = DateTime.UtcNow.ToISO8601z();
+                Logger.Info("{0} - Executing: {1}", isoDate, _description);
+            }
+
+            IsExecuting = true;
             Execute();
+            IsExecuting = false;
         }
 
         public void OnError(Exception error)
@@ -73,6 +90,9 @@ namespace PluginHost.Interface.Tasks
         {
             if (_shuttingDown)
                 return;
+
+            IsStarted   = false;
+            IsExecuting = false;
 
             _shuttingDown = true;
             _subscription.Dispose();

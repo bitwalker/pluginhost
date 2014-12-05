@@ -20,15 +20,15 @@ namespace PluginHost.Configuration
             get
             {
                 if (_cached == null)
-                    _cached = (Config) ConfigurationManager.GetSection("pluginHostConfiguration");
+                    _cached = (Config) ConfigurationManager.GetSection("pluginHost");
                 return _cached;
             }
         }
 
         [ConfigurationProperty("paths")]
-        public IPathsElement Paths
+        public PathsElement Paths
         {
-            get { return (IPathsElement) this["paths"]; }
+            get { return this["paths"] as PathsElement; }
             set { this["paths"] = value; }
         }
     }

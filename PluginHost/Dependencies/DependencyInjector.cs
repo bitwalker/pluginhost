@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Linq;
+using System.Collections.Generic;
+using System.Reflection;
+using System.Threading.Tasks;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Reflection;
-using System.Threading.Tasks;
-using System.Collections.Generic;
-
 using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
 using System.ComponentModel.Composition.Registration;
@@ -15,8 +14,9 @@ using PluginHost.Tasks;
 using PluginHost.Helpers;
 using PluginHost.Configuration;
 using PluginHost.Extensions.Functional;
-using PluginHost.Interface.Logging;
+using PluginHost.Interface.Shell;
 using PluginHost.Interface.Tasks;
+using PluginHost.Interface.Logging;
 
 namespace PluginHost.Dependencies
 {
@@ -159,9 +159,15 @@ namespace PluginHost.Dependencies
             builder.ForTypesDerivedFrom<IEventBus>()
                 .SetCreationPolicy(CreationPolicy.Shared)
                 .Export<IEventBus>();
+            builder.ForTypesDerivedFrom<IEventLoop>()
+                .SetCreationPolicy(CreationPolicy.Shared)
+                .Export<IEventLoop>();
             builder.ForTypesDerivedFrom<ITask>()
-                .Export<ITask>()
-                .AddMetadata(TaskManager.TaskNameMetadataKey, t => t.Name);
+                .Export<ITask>(b =>
+                    b.AddMetadata(TaskManager.TaskNameMetadataKey, t => new TaskMetadata(t.Name))
+                );
+            builder.ForTypesDerivedFrom<IShellCommand>()
+                .Export<IShellCommand>();
 
             return builder;
         }

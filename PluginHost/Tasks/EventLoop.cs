@@ -15,26 +15,26 @@ namespace PluginHost.Tasks
     ///
     /// By subscribing to the Tick event, tasks can schedule themselves for execution.
     /// Use subscription throttling to control how often your task is executed.
-    /// 
+    ///
     /// The ScheduledTask abstract class already wraps up the behavior for tasks of this type,
     /// simply implement it, and provide the base constructor with the TimeSpan defining the
     /// interval to execute on. See that class for implementation instructions.
     /// </summary>
     /// <seealso cref="ScheduledTask"/>
-    public sealed class EventLoop
+    public sealed class EventLoop : IEventLoop
     {
         private bool _started      = false;
         private bool _shuttingDown = false;
 
         private IDisposable _subscription;
         private CancellationToken _cancelToken;
+        private ILogger _logger;
+        private IEventBus _eventBus;
 
-        public ILogger Logger { get; set; }
-        public EventBus EventBus { get; set; }
-
-        public EventLoop(ILogger logger)
+        public EventLoop(ILogger logger, IEventBus eventBus)
         {
-            Logger = logger;
+            _logger = logger;
+            _eventBus = eventBus;
         }
 
         /// <summary>
@@ -50,7 +50,7 @@ namespace PluginHost.Tasks
         }
 
         /// <summary>
-        /// An alternate constructor which allows us to proactively stop execution of
+        /// An alternate start method which allows us to proactively stop execution of
         /// the event loop via a CancellationToken.
         /// </summary>
         /// <param name="cancellationToken">The cancellation token to watch</param>
@@ -77,14 +77,14 @@ namespace PluginHost.Tasks
                 // Create a Tick
                 .Select(_ => new Tick())
                 // And publish it to the EventBus
-                .Subscribe(EventBus.Publish);
+                .Subscribe(_eventBus.Publish);
 
-            Logger.Info("EventLoop running!");
+            _logger.Info("EventLoop running!");
         }
 
         private void HandleError(Exception ex)
         {
-            Logger.Error(ex);
+            _logger.Error(ex);
         }
 
         public void Stop(bool immediate)
@@ -93,7 +93,7 @@ namespace PluginHost.Tasks
                 return;
             _shuttingDown = true;
 
-            Logger.Warn("EventLoop shutting down!");
+            _logger.Warn("EventLoop shutting down!");
 
             if (_subscription != null)
                 _subscription.Dispose();

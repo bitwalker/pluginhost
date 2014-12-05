@@ -14,7 +14,7 @@ namespace PluginHost.Logging
         private static class ConsoleColors
         {
             public static readonly ConsoleColor Trace   = ConsoleColor.Gray;
-            public static readonly ConsoleColor Info    = ConsoleColor.Blue;
+            public static readonly ConsoleColor Info    = ConsoleColor.Cyan;
             public static readonly ConsoleColor Success = ConsoleColor.Green;
             public static readonly ConsoleColor Warn    = ConsoleColor.Yellow;
             public static readonly ConsoleColor Alert   = ConsoleColor.Magenta;
@@ -109,9 +109,7 @@ namespace PluginHost.Logging
             foreach (var line in lines)
             {
                 var formattedLine = FormatLine(line, args);
-                Console.Write("[{0}] {1}{2}", logLevel, formattedLine, Environment.NewLine);
-                if (LogLevel.ERROR == level)
-                    Console.Error.Write(line);
+                Console.WriteLine("{0,-15}{1}", "[" + logLevel + "]", formattedLine);
             }
 
             Console.ResetColor();
@@ -125,7 +123,7 @@ namespace PluginHost.Logging
             var tokens = line.ExtractFormatTokens();
             foreach (var token in tokens.Distinct(_tokenComparer))
             {
-                line = line.Replace(token.Token, args.ToString());
+                line = line.Replace(token.Token, args[token.ArgsIndex].ToString());
             }
 
             return line;
