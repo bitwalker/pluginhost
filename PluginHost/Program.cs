@@ -47,9 +47,6 @@ namespace PluginHost
                 App.Stop();
             if (Shell != null)
                 Shell.Shutdown();
-
-            // Wait a sec to give everything time to shut down
-            Task.Delay(1.Seconds()).Wait();
         }
     }
 }

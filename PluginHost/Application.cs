@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reactive.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 using PluginHost.Tasks;
@@ -53,7 +54,6 @@ namespace PluginHost
                 // Shutdown task engine and wait 5 seconds to give
                 // the processes time to clean up
                 Tasks.Shutdown();
-                Task.Delay(5.Seconds());
 
                 _logger.Success("Goodbye!");
             }
