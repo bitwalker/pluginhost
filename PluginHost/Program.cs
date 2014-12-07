@@ -1,17 +1,23 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-
-using PluginHost.Shell;
-using PluginHost.Extensions.Time;
+﻿using System.Reactive.Subjects;
 
 namespace PluginHost
 {
+    using System;
+    using System.Threading.Tasks;
+    using System.Reactive.Linq;
+
+    using PluginHost.App;
+    using PluginHost.App.Configuration;
+    using System.Reactive;
+
     class Program
     {
-        internal static Application App;
-        internal static CommandShell Shell;
-        private  static CancellationTokenSource _tokenSource;
+        private static readonly Type _applicationType = typeof (Application);
+        private static AppDomain _domain;
+        private static Application _currentApplication;
+        private static IDisposable _shutdownSubscription;
+
+        private static Subject<DateTime> OnShutdown;
 
         /// <summary>
         /// Main entry point for the application
@@ -19,34 +25,62 @@ namespace PluginHost
         /// <param name="args"></param>
         static void Main(string[] args)
         {
-            Task t = MainAsync(args);
-            t.Wait();
+            OnShutdown = new Subject<DateTime>();
+
+            var task = MainAsync(args);
+            task.Wait();
         }
 
         /// <summary>
         /// Handles application start on another thread, only called from Main
         /// </summary>
-        /// <param name="args"></param>
-        /// <returns></returns>
-        async static Task MainAsync(string[] args)
+        static Task MainAsync(string[] args)
         {
-            _tokenSource = new CancellationTokenSource();
+            // Make sure Plugins path is present
+            var pluginPath = Config.Current.Paths.Plugins.Info;
+            if (!pluginPath.Exists)
+                pluginPath.Create();
 
-            App = new Application();
-            App.Init();
+            // Create new AppDomain in which to run application so we can do hot reloads
+            var setup = new AppDomainSetup()
+            {
+                ShadowCopyFiles = "true",
+                ShadowCopyDirectories = pluginPath.FullName
+            };
+            _domain = AppDomain.CreateDomain("PluginHost_App", AppDomain.CurrentDomain.Evidence, setup);
 
-            Shell = new CommandShell(_tokenSource.Token);
-            await Shell.Start();
+            LoadApplication();
+
+            // When OnShutdown is called, unload the domain and exit
+            return OnShutdown
+                .ForEachAsync(datetime =>
+                {
+                    Console.WriteLine("{0} - Application unloaded!", datetime.ToString("O"));
+                    AppDomain.Unload(_domain);
+                });
         }
 
-        public static void Shutdown()
+        static void LoadApplication()
         {
-            if (_tokenSource != null)
-                _tokenSource.Cancel(throwOnFirstException: false);
-            if (App != null)
-                App.Stop();
-            if (Shell != null)
-                Shell.Shutdown();
+            // Create instance of Application in new domain
+            _currentApplication = null;
+            _currentApplication = (Application) _domain.CreateInstanceAndUnwrap(
+                _applicationType.Assembly.FullName,
+                _applicationType.FullName
+            );
+
+            // Shutdown the program if requested by the application
+            _currentApplication.OnShutdown.Subscribe((e) => Shutdown());
+
+            // Start the app
+            _currentApplication.Init();
+            _currentApplication.Start();
+        }
+
+        static void Shutdown()
+        {
+            OnShutdown.OnNext(DateTime.UtcNow);
+            OnShutdown.OnCompleted();
         }
     }
 }
