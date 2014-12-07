@@ -44,7 +44,7 @@ namespace PluginHost.App.Dependencies
             _conventions  = GetConventions();
 
             var assembly  = Assembly.GetExecutingAssembly();
-            var directory = Config.Current.Paths.Plugins.Location;
+            var directory = Config.Current.Paths.Plugins.Info.FullName;
             var filter    = @"*.dll";
 
             // Create catalogs
@@ -149,28 +149,42 @@ namespace PluginHost.App.Dependencies
 
         private RegistrationBuilder GetConventions()
         {
+            // When selecting constructors for injection, use the one
+            // with the largest number of parameters
+            Func<ConstructorInfo[], ConstructorInfo> largestCtor = (info) =>
+                info.OrderByDescending(c => c.GetParameters().Length).FirstOrDefault();
+
+            // Ensure that all constructor imports allow recomposition
+            Action<ParameterInfo, ImportBuilder> defaultImports = (pi, b) =>
+                b.AllowRecomposition();
+
             var builder = new RegistrationBuilder();
             builder.ForType<Config>()
                 .SetCreationPolicy(CreationPolicy.Shared)
-                .Export<IConfig>();
+                .Export<IConfig>()
+                .SelectConstructor(largestCtor, defaultImports);
             builder.ForTypesDerivedFrom<ILogger>()
                 .SetCreationPolicy(CreationPolicy.Shared)
-                .Export<ILogger>();
+                .Export<ILogger>()
+                .SelectConstructor(largestCtor, defaultImports);
             builder.ForTypesDerivedFrom<IEventBus>()
                 .SetCreationPolicy(CreationPolicy.Shared)
-                .Export<IEventBus>();
+                .Export<IEventBus>()
+                .SelectConstructor(largestCtor, defaultImports);
             builder.ForTypesDerivedFrom<IEventLoop>()
                 .SetCreationPolicy(CreationPolicy.Shared)
-                .Export<IEventLoop>();
+                .Export<IEventLoop>()
+                .SelectConstructor(largestCtor, defaultImports);
             builder.ForType<TaskManager>()
                 .SetCreationPolicy(CreationPolicy.Shared)
+                .SelectConstructor(largestCtor, defaultImports)
                 .Export<ITaskManager>();
             builder.ForTypesDerivedFrom<ITask>()
-                .Export<ITask>(b =>
-                    b.AddMetadata(TaskManager.TaskNameMetadataKey, t => new TaskMetadata(t.Name))
-                );
+                .Export<ITask>(b => b.AddMetadata(TaskMetadata.MetadataKey, t => t.Name))
+                .SelectConstructor(largestCtor, defaultImports);
             builder.ForTypesDerivedFrom<IShellCommand>()
-                .Export<IShellCommand>();
+                .Export<IShellCommand>()
+                .SelectConstructor(largestCtor, defaultImports);
 
             return builder;
         }

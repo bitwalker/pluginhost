@@ -30,8 +30,6 @@ namespace PluginHost.App.Shell
             Console.TreatControlCAsInput = false;
             Console.CancelKeyPress += (sender, e) => Shutdown();
 
-            Console.Clear();
-
             await Task.Run(()=>Loop(), _token);
         }
 

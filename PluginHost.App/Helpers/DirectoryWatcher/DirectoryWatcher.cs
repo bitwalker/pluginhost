@@ -35,6 +35,7 @@ namespace PluginHost.App.Helpers
         private const int ERROR_SHARING_VIOLATION = 32;
         private const int ERROR_LOCK_VIOLATION    = 33;
         private const NotifyFilters NOTIFY_FILTERS =
+            NotifyFilters.FileName |
             NotifyFilters.CreationTime |
             NotifyFilters.LastWrite |
             NotifyFilters.Size;
@@ -79,6 +80,7 @@ namespace PluginHost.App.Helpers
             _watcher.NotifyFilter = NOTIFY_FILTERS;
             _watcher.Created += new FileSystemEventHandler(OnFileSystemEvent);
             _watcher.Changed += new FileSystemEventHandler(OnFileSystemEvent);
+            _watcher.Deleted += new FileSystemEventHandler(OnFileSystemEvent);
         }
 
         /// <summary>

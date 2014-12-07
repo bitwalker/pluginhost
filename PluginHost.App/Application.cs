@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.Composition;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading;
@@ -17,34 +18,27 @@ namespace PluginHost.App
 {
     public class Application : MarshalByRefObject
     {
-        private ILogger _logger;
+        [Import(AllowRecomposition = true)]
+        private ILogger _logger = null;
         private IDisposable _exportsChangedSubscription;
         private CancellationTokenSource _tokenSource;
 
-        internal ITaskManager Tasks;
-        internal CommandShell Shell;
+        [Import(AllowRecomposition = true)]
+        internal ITaskManager Tasks { get; set; }
+        internal CommandShell Shell { get; private set; }
 
         public static Application Current { get; private set; }
 
         /// <summary>
         /// Triggered when the Application should be reloaded
         /// </summary>
-        public Subject<DateTime> OnReload;
+        public event EventHandler OnReload;
         /// <summary>
         /// Triggered when Application is shutting down
         /// </summary>
-        public Subject<DateTime> OnShutdown;
+        public event EventHandler OnShutdown;
 
         public Application()
-        {
-            // This is a dirty hack, but it allows us to work around the need
-            // for creating by reflection while still pretending this is a 'singleton' class.
-            Current = this;
-            OnReload = new Subject<DateTime>();
-            OnShutdown = new Subject<DateTime>();
-        }
-
-        public void Init()
         {
             _tokenSource = new CancellationTokenSource();
 
@@ -54,14 +48,17 @@ namespace PluginHost.App
             if (!Config.Current.Paths.Plugins.Info.Exists)
                 Config.Current.Paths.Plugins.Info.Create();
 
-            _logger = DependencyInjector.Current.Resolve<ILogger>();
-            Tasks   = DependencyInjector.Current.Resolve<ITaskManager>();
+            DependencyInjector.Current.Inject(this);
 
             _exportsChangedSubscription = DependencyInjector.Current.ExportChanged
-                .Where(e => e.Metadata.ContainsKey(TaskManager.TaskNameMetadataKey))
+                .Where(e => e.Metadata.ContainsKey(TaskMetadata.MetadataKey))
                 .Subscribe(UpdateTasks);
 
             Shell = new CommandShell(_tokenSource.Token);
+
+            // This is a dirty hack, but it allows us to work around the need
+            // for creating by reflection while still pretending this is a 'singleton' class.
+            Current = this;
         }
 
         public void Start()
@@ -72,7 +69,8 @@ namespace PluginHost.App
         public void Reload()
         {
             _logger.Alert("Reloading application...");
-            OnReload.OnNext(DateTime.UtcNow);
+            if (OnReload != null)
+                OnReload(null, EventArgs.Empty);
         }
 
         public void Stop()
@@ -81,16 +79,16 @@ namespace PluginHost.App
             {
                 _logger.Info("Shutting down...");
 
-                // Trigger all cancellable tasks
-                _tokenSource.Cancel(throwOnFirstException: false);
-
-                // Shutdown task engine and wait 5 seconds to give
-                // the processes time to clean up
+                // Shutdown task engine
                 Tasks.Shutdown();
+
+                // Kill the shell
+                _tokenSource.Cancel(throwOnFirstException: false);
 
                 _logger.Success("Goodbye!");
 
-                OnShutdown.OnNext(DateTime.UtcNow);
+                if (OnShutdown != null)
+                    OnShutdown(null, EventArgs.Empty);
             }
             catch (Exception ex)
             {
@@ -100,11 +98,11 @@ namespace PluginHost.App
 
         private void UpdateTasks(ExportChangedEventArgs e)
         {
-            var taskMeta = e.Metadata[TaskManager.TaskNameMetadataKey] as TaskMetadata;
+            var taskMeta = e.Metadata[TaskMetadata.MetadataKey] as ITaskMetadata;
             if (taskMeta == null)
                 return;
 
-            var taskName = taskMeta.Name;
+            var taskName = taskMeta.TaskName;
             switch (e.Type)
             {
                 case ExportChangeType.Added:
@@ -123,13 +121,13 @@ namespace PluginHost.App
             var task = DependencyInjector.Current
                 .Resolve<ITask, IDictionary<string, object>>(meta =>
                 {
-                    if (!meta.ContainsKey(TaskManager.TaskNameMetadataKey))
+                    if (!meta.ContainsKey(TaskMetadata.MetadataKey))
                         return false;
 
-                    var taskMeta = meta[TaskManager.TaskNameMetadataKey] as TaskMetadata;
-                    if (taskMeta == null || taskMeta.Name == null)
+                    var taskMeta = meta[TaskMetadata.MetadataKey] as ITaskMetadata;
+                    if (taskMeta == null || taskMeta.TaskName == null)
                         return false;
-                    return taskMeta.Name.Equals(taskName);
+                    return taskMeta.TaskName.Equals(taskName);
                 });
 
             return task;

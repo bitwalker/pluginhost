@@ -59,6 +59,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ConsoleExtended.cs" />
     <Compile Include="Program.cs">
       <SubType>Code</SubType>
     </Compile>

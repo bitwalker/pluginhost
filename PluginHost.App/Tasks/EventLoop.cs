@@ -69,17 +69,16 @@ namespace PluginHost.App.Tasks
 
         private void Init()
         {
-            _subscription = Observable
-                // Once per second
+            // Generate event once per second while enabled
+            var ticks = Observable
                 .Interval(1.Seconds())
-                // While enabled
-                .DoWhile(IsEnabled)
-                // Create a Tick
+                .DoWhile(IsEnabled);
+            // Publish a tick event for each interval
+            _subscription = ticks
                 .Select(_ => new Tick())
-                // And publish it to the EventBus
                 .Subscribe(_eventBus.Publish);
 
-            _logger.Info("EventLoop running!");
+            _logger.Success("EventLoop has been started.");
         }
 
         private void HandleError(Exception ex)
@@ -93,16 +92,20 @@ namespace PluginHost.App.Tasks
                 return;
             _shuttingDown = true;
 
-            _logger.Warn("EventLoop shutting down!");
-
             if (_subscription != null)
                 _subscription.Dispose();
+
+            _logger.Warn("EventLoop stopped.");
         }
 
         private bool IsEnabled()
         {
-            return (_cancelToken == null || !_cancelToken.IsCancellationRequested) &&
-                   !_shuttingDown;
+            if (_shuttingDown)
+                return false;
+            if (_cancelToken != null && _cancelToken.IsCancellationRequested)
+                return false;
+
+            return true;
         }
     }
 }

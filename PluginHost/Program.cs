@@ -1,6 +1,4 @@
-﻿using System.Reactive.Subjects;
-
-namespace PluginHost
+﻿namespace PluginHost
 {
     using System;
     using System.Threading.Tasks;
@@ -9,32 +7,49 @@ namespace PluginHost
     using PluginHost.App;
     using PluginHost.App.Configuration;
     using System.Reactive;
+    using System.Reactive.Subjects;
 
-    class Program
+    class Program : MarshalByRefObject
     {
         private static readonly Type _applicationType = typeof (Application);
-        private static AppDomain _domain;
-        private static Application _currentApplication;
-        private static IDisposable _shutdownSubscription;
 
-        private static Subject<DateTime> OnShutdown;
+        private AppDomain _domain;
+        private Application _currentApplication;
+        private Subject<DateTime> OnShutdown;
+
+        private Program()
+        {
+            OnShutdown = new Subject<DateTime>();
+        }
 
         /// <summary>
         /// Main entry point for the application
         /// </summary>
         /// <param name="args"></param>
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
-            OnShutdown = new Subject<DateTime>();
+            try
+            {
+                var program = new Program();
+                program.Run(args).Wait();
+            }
+            catch (AggregateException ex)
+            {
+                ex.Handle(e =>
+                {
+                    ConsoleExtended.Error(e.Message);
+                    return true;
+                });
+            }
 
-            var task = MainAsync(args);
-            task.Wait();
+            // Wait for input so user has chance to read logs
+            Console.Read();
         }
 
         /// <summary>
         /// Handles application start on another thread, only called from Main
         /// </summary>
-        static Task MainAsync(string[] args)
+        private Task Run(string[] args)
         {
             // Make sure Plugins path is present
             var pluginPath = Config.Current.Paths.Plugins.Info;
@@ -52,15 +67,10 @@ namespace PluginHost
             LoadApplication();
 
             // When OnShutdown is called, unload the domain and exit
-            return OnShutdown
-                .ForEachAsync(datetime =>
-                {
-                    Console.WriteLine("{0} - Application unloaded!", datetime.ToString("O"));
-                    AppDomain.Unload(_domain);
-                });
+            return OnShutdown.ForEachAsync(OnExit);
         }
 
-        static void LoadApplication()
+        private void LoadApplication(bool reloading = false)
         {
             // Create instance of Application in new domain
             _currentApplication = null;
@@ -69,18 +79,30 @@ namespace PluginHost
                 _applicationType.FullName
             );
 
+            // Handle reloading the application when requested
+            _currentApplication.OnReload += OnReload;
             // Shutdown the program if requested by the application
-            _currentApplication.OnShutdown.Subscribe((e) => Shutdown());
+            _currentApplication.OnShutdown += Shutdown;
 
             // Start the app
-            _currentApplication.Init();
             _currentApplication.Start();
         }
 
-        static void Shutdown()
+        private void OnReload(object sender, EventArgs e)
+        {
+            LoadApplication(reloading: true);
+        }
+
+        private void Shutdown(object sender, EventArgs e)
         {
             OnShutdown.OnNext(DateTime.UtcNow);
             OnShutdown.OnCompleted();
+        }
+
+        private void OnExit(DateTime now)
+        {
+            ConsoleExtended.Alert("Application unloaded!");
+            AppDomain.Unload(_domain);
         }
     }
 }

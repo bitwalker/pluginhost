@@ -76,6 +76,7 @@
     <Compile Include="Shell\Commands\ExitCommand.cs" />
     <Compile Include="Shell\Commands\HelpCommand.cs" />
     <Compile Include="Shell\Commands\ListTasksCommand.cs" />
+    <Compile Include="Shell\Commands\ReloadCommand.cs" />
     <Compile Include="Shell\Commands\StartCommand.cs" />
     <Compile Include="Tasks\EventBus.cs" />
     <Compile Include="Tasks\EventLoop.cs" />

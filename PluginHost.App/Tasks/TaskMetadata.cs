@@ -1,13 +1,20 @@
 ﻿namespace PluginHost.App.Tasks
 {
-    public class TaskMetadata
+    public interface ITaskMetadata
     {
-        public string Name { get; set; }
+        string TaskName { get; }
+    }
+
+    public class TaskMetadata : ITaskMetadata
+    {
+        public const string MetadataKey = "TaskName";
+
+        public string TaskName { get; set; }
 
         public TaskMetadata() {}
         public TaskMetadata(string name)
         {
-            Name = name;
+            TaskName = name;
         }
     }
 }

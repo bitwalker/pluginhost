@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel.Composition;
 using System.Linq;
 
 using PluginHost.Interface.Tasks;
@@ -13,92 +14,81 @@ namespace PluginHost.App.Tasks
     /// </summary>
     public class TaskManager : ITaskManager
     {
-        public const string TaskNameMetadataKey = "TaskName";
-
         private bool _started = false;
         private bool _shuttingDown = false;
-        private IEventLoop _eventLoop;
-        private ILogger _logger;
-        private IDictionary<string, ITask> _tasks;
+
+        [Import(AllowRecomposition = true)]
+        private ILogger _logger { get; set; }
+        [Import(AllowRecomposition = true)]
+        private IEventLoop _eventLoop { get; set; }
+        [ImportMany(AllowRecomposition = true)]
+        private IEnumerable<Lazy<ITask, ITaskMetadata>> _tasks { get; set; }
 
         public bool IsStarted { get { return _started; } }
 
-        public TaskManager(IEnumerable<Lazy<ITask, IDictionary<string, object>>> tasks, ILogger logger)
-        {
-            _logger = logger;
-            _tasks  = new ConcurrentDictionary<string, ITask>();
-
-            foreach (var task in tasks)
-            {
-                if (task.Metadata.ContainsKey(TaskManager.TaskNameMetadataKey))
-                {
-                    var taskMeta = task.Metadata[TaskManager.TaskNameMetadataKey] as TaskMetadata;
-                    if (taskMeta == null || taskMeta.Name == null)
-                        continue;
-
-                    AddTask(taskMeta.Name, task.Value, init: false, start: false);
-                }
-            }
-        }
-
         public IQueryable<KeyValuePair<string, ITask>> AvailableTasks
         {
-            get { return _tasks.AsQueryable(); }
+            get
+            {
+                return _tasks
+                    .Select(t => new KeyValuePair<string, ITask>(t.Metadata.TaskName, t.Value))
+                    .AsQueryable();
+            }
         }
 
         public void AddTask(string taskName, ITask task, bool init = true, bool start = true)
         {
-            try
-            {
-                if (_tasks.ContainsKey(taskName))
-                {
-                    _logger.Warn("Attempted to add a task ({0}) which is already being managed!", taskName);
-                    _logger.Warn("Request to add new task ({0}) has been denied.", taskName);
-                    return;
-                }
+            //try
+            //{
+            //    if (_tasks.ContainsKey(taskName))
+            //    {
+            //        _logger.Warn("Attempted to add a task ({0}) which is already being managed!", taskName);
+            //        _logger.Warn("Request to add new task ({0}) has been denied.", taskName);
+            //        return;
+            //    }
 
-                _logger.Alert("Adding new task ({0})...", taskName);
+            //    _logger.Alert("Adding new task ({0})...", taskName);
 
-                _tasks.Add(taskName, task);
+            //    _tasks.Add(taskName, task);
 
-                if (_started)
-                {
-                    if (init)  { InitTask(taskName); }
-                    if (start) { StartTask(taskName); }
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.Error(ex);
-                _logger.Warn("Non-fatal exception occurred while adding new task. All systems normal.");
-            }
+            //    if (_started)
+            //    {
+            //        if (init)  { InitTask(taskName); }
+            //        if (start) { StartTask(taskName); }
+            //    }
+            //}
+            //catch (Exception ex)
+            //{
+            //    _logger.Error(ex);
+            //    _logger.Warn("Non-fatal exception occurred while adding new task. All systems normal.");
+            //}
         }
 
         public void RemoveTask(string taskName)
         {
-            try
-            {
-                if (!_tasks.ContainsKey(taskName))
-                {
-                    _logger.Warn("Removal of task ({0}) was requested, but is not known to the task manager!");
-                    return;
-                }
+            //try
+            //{
+            //    if (!_tasks.ContainsKey(taskName))
+            //    {
+            //        _logger.Warn("Removal of task ({0}) was requested, but is not known to the task manager!");
+            //        return;
+            //    }
 
-                _logger.Alert("Removal of task ({0}) has been requested!");
+            //    _logger.Alert("Removal of task ({0}) has been requested!");
 
-                if (_started)
-                {
-                    StopTask(taskName);
-                }
+            //    if (_started)
+            //    {
+            //        StopTask(taskName);
+            //    }
 
-                _tasks.Remove(taskName);
-                _logger.Success("Task ({0}) has been removed successfully.");
-            }
-            catch (Exception ex)
-            {
-                _logger.Error(ex);
-                _logger.Alert("Non-fatal exception occurred, all systems normal.");
-            }
+            //    _tasks.Remove(taskName);
+            //    _logger.Success("Task ({0}) has been removed successfully.");
+            //}
+            //catch (Exception ex)
+            //{
+            //    _logger.Error(ex);
+            //    _logger.Alert("Non-fatal exception occurred, all systems normal.");
+            //}
         }
 
         public void Start()
@@ -114,7 +104,6 @@ namespace PluginHost.App.Tasks
             _started = true;
 
             // Start event loop
-            _eventLoop = Dependencies.DependencyInjector.Current.Resolve<IEventLoop>();
             _eventLoop.Start();
 
             // Load and execute tasks
@@ -144,16 +133,21 @@ namespace PluginHost.App.Tasks
 
         public void InitTask(string taskName)
         {
-            if (!_tasks.ContainsKey(taskName))
+            var task = _tasks.FirstOrDefault(t => t.Metadata.TaskName == taskName);
+            if (task == null)
                 return;
 
-            var task = _tasks[taskName];
-            if (task.IsInitialized)
+            InitTask(task);
+        }
+
+        private void InitTask(Lazy<ITask, ITaskMetadata> task)
+        {
+            if (task.Value.IsInitialized)
                 return;
             try
             {
-                _logger.Info("Initializing task ({0})...", taskName);
-                task.Init();
+                _logger.Info("Initializing task ({0})...", task.Metadata.TaskName);
+                task.Value.Init();
             }
             catch (Exception ex)
             {
@@ -164,18 +158,23 @@ namespace PluginHost.App.Tasks
 
         public void StartTask(string taskName)
         {
-            if (!_tasks.ContainsKey(taskName))
+            var task = _tasks.FirstOrDefault(t => t.Metadata.TaskName == taskName);
+            if (task == null)
                 return;
 
-            var task = _tasks[taskName];
-            if (task.IsStarted)
+            StartTask(task);
+        }
+
+        private void StartTask(Lazy<ITask, ITaskMetadata> task)
+        {
+            if (task.Value.IsStarted)
                 return;
 
             try
             {
-                _logger.Info("Starting task ({0})...", taskName);
-                task.Start();
-                _logger.Success("Task ({0}) has been started.", taskName);
+                _logger.Info("Starting task ({0})...", task.Metadata.TaskName);
+                task.Value.Start();
+                _logger.Success("Task ({0}) has been started.", task.Metadata.TaskName);
             }
             catch (Exception ex)
             {
@@ -186,17 +185,22 @@ namespace PluginHost.App.Tasks
 
         public void StopTask(string taskName)
         {
-            if (!_tasks.ContainsKey(taskName))
+            var task = _tasks.FirstOrDefault(t => t.Metadata.TaskName == taskName);
+            if (task == null)
                 return;
 
-            var task = _tasks[taskName];
-            if (!task.IsStarted)
+            StopTask(task);
+        }
+
+        private void StopTask(Lazy<ITask, ITaskMetadata> task)
+        {
+            if (!task.Value.IsStarted)
                 return;
 
             try
             {
-                _logger.Info("Stopping task ({0})...", taskName);
-                task.Stop(brutalKill: true);
+                _logger.Info("Stopping task ({0})...", task.Metadata.TaskName);
+                task.Value.Stop(brutalKill: true);
             }
             catch (Exception ex)
             {
@@ -210,10 +214,7 @@ namespace PluginHost.App.Tasks
             if (_shuttingDown)
                 return;
 
-            var taskNames = _tasks.Select(t => t.Key).ToArray();
-
-            // Initialize tasks
-            foreach (var task in taskNames)
+            foreach (var task in _tasks)
             {
                 InitTask(task);
             }
@@ -221,7 +222,7 @@ namespace PluginHost.App.Tasks
             _logger.Success("All tasks have been initialized.");
 
             // Start task execution
-            foreach (var task in taskNames)
+            foreach (var task in _tasks)
             {
                 StartTask(task);
             }

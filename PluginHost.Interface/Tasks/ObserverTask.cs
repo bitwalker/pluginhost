@@ -14,7 +14,6 @@ namespace PluginHost.Interface.Tasks
     public abstract class ObserverTask<T> : IObserver<T>, ITask
         where T : class
     {
-        private bool _shuttingDown = false;
         private IDisposable _subscription;
         private readonly string _description;
         private readonly bool _quiet;
@@ -58,30 +57,33 @@ namespace PluginHost.Interface.Tasks
         protected abstract void Execute();
 
         /// <summary>
-        /// Called when this task should be stopped.
-        /// Ensure you call base.Stop in your implementation, to make
-        /// sure the instance is fully cleaned up.
+        /// Called when this task should be stopped. Ensure when overriding this
+        /// method, that you call base.Stop() in your implementation.
         /// </summary>
-        /// <param name="brutalKill">Whether the task should be killed or not</param>
-        public virtual void Stop(bool brutalKill)
+        /// <param name="immediate">Whether the task should be stopped immediately</param>
+        public virtual void Stop(bool immediate = false)
         {
-            if (_shuttingDown)
+            if (!IsStarted)
                 return;
 
-            IsStarted = false;
             IsExecuting = false;
+            IsStarted   = false;
 
-            _shuttingDown = true;
-            _subscription.Dispose();
-
-            Kill(brutalKill);
+            if (_subscription != null)
+            {
+                _subscription.Dispose();
+                _subscription = null;
+            }
         }
 
-        /// <summary>
-        /// Called when this task is being shutdown.
-        /// </summary>
-        /// <param name="brutalKill">Whether this shutdown should be expedited or not.</param>
-        protected abstract void Kill(bool brutalKill);
+        public virtual void Dispose()
+        {
+            if (_subscription != null)
+            {
+                _subscription.Dispose();
+                _subscription = null;
+            }
+        }
 
         /// <summary>
         /// Called for every event in the event stream this task subscribes to
@@ -89,7 +91,7 @@ namespace PluginHost.Interface.Tasks
         /// <param name="value">The value of the event</param>
         public void OnNext(T value)
         {
-            if (_shuttingDown)
+            if (!IsStarted)
                 return;
 
             if (!_quiet)
@@ -117,7 +119,7 @@ namespace PluginHost.Interface.Tasks
         /// </summary>
         public void OnCompleted()
         {
-            Stop(true);
+            Stop();
         }
     }
 }
