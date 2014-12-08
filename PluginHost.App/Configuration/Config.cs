@@ -1,11 +1,9 @@
-﻿using System;
-using System.Configuration;
-using System.IO;
-
-using PluginHost.App.Configuration.Elements;
+﻿using System.Configuration;
 
 namespace PluginHost.App.Configuration
 {
+    using PluginHost.Interface.Configuration;
+
     public class Config : ConfigurationSection, IConfig
     {
         private static Config _cached;
@@ -26,10 +24,17 @@ namespace PluginHost.App.Configuration
         }
 
         [ConfigurationProperty("paths")]
-        public PathsElement Paths
+        public Elements.PathsElement Paths
         {
-            get { return this["paths"] as PathsElement; }
+            get { return this["paths"] as Elements.PathsElement; }
             set { this["paths"] = value; }
+        }
+
+        [ConfigurationProperty("logging")]
+        public Elements.LoggingElement Logging
+        {
+            get { return this["logging"] as Elements.LoggingElement; }
+            set { this["logging"] = value; }
         }
     }
 }

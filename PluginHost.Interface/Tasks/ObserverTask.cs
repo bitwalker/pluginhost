@@ -18,9 +18,10 @@ namespace PluginHost.Interface.Tasks
         private readonly string _description;
         private readonly bool _quiet;
 
+        public bool IsDisposed { get; protected set; }
         public abstract bool IsInitialized { get; protected set; }
-        public bool IsStarted { get; private set; }
-        public bool IsExecuting { get; private set; }
+        public bool IsStarted { get; protected set; }
+        public bool IsExecuting { get; protected set; }
         protected abstract IEventBus EventBus { get; set; }
         protected abstract ILogger Logger { get; set; }
 

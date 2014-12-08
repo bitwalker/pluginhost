@@ -1,108 +1,158 @@
 ﻿using System;
+using System.Configuration;
 using System.Linq;
 using System.Text;
 
-using PluginHost.Extensions.Comparers;
-using PluginHost.Extensions.Enums;
-using PluginHost.Extensions.Text;
-using PluginHost.Interface.Logging;
-
 namespace PluginHost.App.Logging
 {
+    using PluginHost.App.Configuration;
+    using PluginHost.Extensions.Comparers;
+    using PluginHost.Extensions.Enums;
+    using PluginHost.Extensions.Text;
+    using PluginHost.Interface.Logging;
+
     public class ConsoleLogger : ILogger
     {
-        private static class ConsoleColors
-        {
-            public static readonly ConsoleColor Trace   = ConsoleColor.Gray;
-            public static readonly ConsoleColor Info    = ConsoleColor.Cyan;
-            public static readonly ConsoleColor Success = ConsoleColor.Green;
-            public static readonly ConsoleColor Warn    = ConsoleColor.Yellow;
-            public static readonly ConsoleColor Alert   = ConsoleColor.Magenta;
-            public static readonly ConsoleColor Error   = ConsoleColor.Red;
-        }
-
         private static readonly GenericComparer<FormattingToken, string> _tokenComparer =
             GenericComparer<FormattingToken>.Create(t => t.Token);
 
+        private bool _isEnabled;
+        private LogLevel _level;
+
+        public ConsoleLogger()
+        {
+            var config = Config.Current.Logging.Loggers["ConsoleLogger"];
+            if (config == null)
+                throw new ConfigurationErrorsException("Missing configuration for ConsoleLogger!");
+
+            _level = config.LogLevel;
+            _isEnabled = Config.Current.Logging.IsEnabled && _level > LogLevel.None;
+        }
+
         public void Trace(string message)
         {
-            WriteOutput(LogLevel.TRACE, ConsoleColors.Trace, message);
+            WriteOutput(LogLevels.Trace, message);
         }
 
         public void Trace(string message, params object[] args)
         {
-            WriteOutput(LogLevel.TRACE, ConsoleColors.Trace, message, args);
+            WriteOutput(LogLevels.Trace, message, args);
         }
 
-        public void Info(string message)
+        public void Debug(string message)
         {
-            WriteOutput(LogLevel.INFO, ConsoleColors.Info, message);
+            WriteOutput(LogLevels.Debug, message);
         }
 
-        public void Info(string message, params object[] args)
+        public void Debug(string message, params object[] args)
         {
-            WriteOutput(LogLevel.INFO, ConsoleColors.Info, message, args);
+            WriteOutput(LogLevels.Debug, message, args);
         }
 
         public void Success(string message)
         {
-            WriteOutput(LogLevel.SUCCESS, ConsoleColors.Success, message);
+            WriteOutput(LogLevels.Success, message);
         }
 
         public void Success(string message, params object[] args)
         {
-            WriteOutput(LogLevel.SUCCESS, ConsoleColors.Success, message, args);
+            WriteOutput(LogLevels.Success, message, args);
         }
 
-        public void Warn(string message)
+        public void Info(string message)
         {
-            WriteOutput(LogLevel.WARN, ConsoleColors.Warn, message);
+            WriteOutput(LogLevels.Info, message);
         }
 
-        public void Warn(string message, params object[] args)
+        public void Info(string message, params object[] args)
         {
-            WriteOutput(LogLevel.WARN, ConsoleColors.Warn, message, args);
+            WriteOutput(LogLevels.Info, message, args);
         }
 
         public void Alert(string message)
         {
-            WriteOutput(LogLevel.ALERT, ConsoleColors.Alert, message);
+            WriteOutput(LogLevels.Alert, message);
         }
 
         public void Alert(string message, params object[] args)
         {
-            WriteOutput(LogLevel.ALERT, ConsoleColors.Alert, message, args);
+            WriteOutput(LogLevels.Alert, message, args);
+        }
+
+        public void Warn(string message)
+        {
+            WriteOutput(LogLevels.Warn, message);
+        }
+
+        public void Warn(string message, params object[] args)
+        {
+            WriteOutput(LogLevels.Warn, message, args);
         }
 
         public void Error(string message)
         {
-            WriteOutput(LogLevel.ERROR, ConsoleColors.Error, message);
+            WriteOutput(LogLevels.Error, message);
         }
 
         public void Error(string message, params object[] args)
         {
-            WriteOutput(LogLevel.ERROR, ConsoleColors.Error, message, args);
+            WriteOutput(LogLevels.Error, message, args);
         }
 
         public void Error(Exception ex)
         {
+            if (!IsEnabled(LogLevels.Error)) return;
+
             var formatted = FormatException(ex);
-            WriteOutput(LogLevel.ERROR, ConsoleColors.Error, formatted);
+            WriteOutput(LogLevels.Error, formatted);
         }
 
         public void Error(Exception ex, string message, params object[] args)
         {
-            WriteOutput(LogLevel.ERROR, ConsoleColors.Error, message, args);
+            if (!IsEnabled(LogLevels.Error)) return;
 
-            var formatted = FormatException(ex);
-            WriteOutput(LogLevel.ERROR, ConsoleColors.Error, formatted);
+            var formatted = FormatException(ex, message);
+            WriteOutput(LogLevels.Error, formatted);
         }
 
-        private void WriteOutput(LogLevel level, ConsoleColor color, string output, params object[] args)
+        public void Fatal(string message)
         {
+            WriteOutput(LogLevels.Fatal, message);
+        }
+
+        public void Fatal(string message, params object[] args)
+        {
+            WriteOutput(LogLevels.Fatal, message, args);
+        }
+
+        public void Fatal(Exception ex)
+        {
+            if (!IsEnabled(LogLevels.Fatal)) return;
+
+            var formatted = FormatException(ex);
+            WriteOutput(LogLevels.Fatal, formatted);
+        }
+
+        public void Fatal(Exception ex, string message, params object[] args)
+        {
+            if (!IsEnabled(LogLevels.Fatal)) return;
+
+            var formatted = FormatException(ex, message);
+            WriteOutput(LogLevels.Error, formatted);
+        }
+
+        private bool IsEnabled(LogLevel level)
+        {
+            return _isEnabled && level >= _level;
+        }
+
+        private void WriteOutput(LogLevel level, string output, params object[] args)
+        {
+            if (!IsEnabled(level)) return;
+
             var logLevel = level.GetName();
 
-            Console.ForegroundColor = color;
+            Console.ForegroundColor = level.Color;
 
             // Prepend log level to each line of the output
             var lines = output.Split(new[] {'\r', '\n'}, StringSplitOptions.RemoveEmptyEntries);
@@ -129,9 +179,14 @@ namespace PluginHost.App.Logging
             return line;
         }
 
-        private string FormatException(Exception ex)
+        private string FormatException(Exception ex, string message = "")
         {
-            var builder = new StringBuilder();
+            StringBuilder builder = null;
+            if (string.IsNullOrWhiteSpace(message))
+                builder = new StringBuilder();
+            else
+                builder = new StringBuilder(message + Environment.NewLine);
+
             builder.AppendFormat("[EXCEPTION] {0}", ex.Message);
             builder.AppendLine();
 

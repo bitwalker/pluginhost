@@ -2,14 +2,10 @@
 
 namespace PluginHost.App.Configuration.Elements
 {
-    public interface IPathsElement
-    {
-        PathElement Plugins { get; }
-        PathElement LocalStorage { get; }
-    }
+    using PluginHost.Interface.Configuration.Types;
 
     [ConfigurationCollection(typeof(PathElement), AddItemName = "path", CollectionType = ConfigurationElementCollectionType.BasicMap)]
-    public class PathsElement : ConfigurationElementCollection, IPathsElement
+    public class PathsElement : ConfigurationElementCollection, IPathsConfiguration
     {
         public override ConfigurationElementCollectionType CollectionType
         {

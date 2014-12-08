@@ -19,9 +19,10 @@ namespace PluginHost.Interface.Tasks
         private readonly string _description;
         private readonly bool _quiet;
 
+        public bool IsDisposed { get; protected set; }
         public abstract bool IsInitialized { get; protected set; }
-        public bool IsStarted { get; private set; }
-        public bool IsExecuting { get; private set; }
+        public bool IsStarted { get; protected set; }
+        public bool IsExecuting { get; protected set; }
         protected abstract IEventBus EventBus { get; set; }
         protected abstract ILogger Logger { get; set; }
 
@@ -82,6 +83,10 @@ namespace PluginHost.Interface.Tasks
         /// </summary>
         /// <param name="brutalKill">Whether this shutdown should be expedited or not.</param>
         protected abstract void Kill(bool brutalKill);
+
+        public virtual void Dispose()
+        {
+        }
 
         /// <summary>
         /// Called for every event in the event stream this task has subscribed to

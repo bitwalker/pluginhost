@@ -57,9 +57,12 @@
   <ItemGroup>
     <Compile Include="Application.cs" />
     <Compile Include="Configuration\Config.cs" />
+    <Compile Include="Configuration\Elements\LoggerElement.cs" />
+    <Compile Include="Configuration\Elements\LoggersElement.cs" />
+    <Compile Include="Configuration\Elements\LoggingElement.cs" />
+    <Compile Include="Configuration\Elements\ShellElement.cs" />
     <Compile Include="Configuration\Elements\PathElement.cs" />
     <Compile Include="Configuration\Elements\PathsElement.cs" />
-    <Compile Include="Configuration\IConfig.cs" />
     <Compile Include="Dependencies\DependencyInjector.cs" />
     <Compile Include="Dependencies\ExportChangedEventArgs.cs" />
     <Compile Include="Dependencies\ExportChangeType.cs" />
@@ -68,7 +71,6 @@
     <Compile Include="Helpers\DirectoryWatcher\FileChangedEventArgs.cs" />
     <Compile Include="Logging\ConsoleLogger.cs" />
     <Compile Include="Logging\EventLogLogger.cs" />
-    <Compile Include="Logging\LogLevel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Shell\CommandParser.cs" />
     <Compile Include="Shell\CommandShell.cs" />

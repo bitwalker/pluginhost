@@ -3,14 +3,9 @@ using System.Configuration;
 
 namespace PluginHost.App.Configuration.Elements
 {
-    public interface IPathElement
-    {
-        string Name { get; set; }
-        string Location { get; set; }
-        DirectoryInfo Info { get; }
-    }
+    using PluginHost.Interface.Configuration.Types;
 
-    public class PathElement : ConfigurationElement, IPathElement
+    public class PathElement : ConfigurationElement, IPathConfiguration
     {
         /// <summary>
         /// The name of this path

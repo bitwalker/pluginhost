@@ -51,7 +51,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Configuration\IConfig.cs" />
+    <Compile Include="Configuration\Types\ILoggerConfiguration.cs" />
+    <Compile Include="Configuration\Types\ILoggersConfiguration.cs" />
+    <Compile Include="Configuration\Types\ILoggingConfiguration.cs" />
+    <Compile Include="Configuration\Types\IPathConfiguration.cs" />
+    <Compile Include="Configuration\Types\IPathsConfiguration.cs" />
+    <Compile Include="Configuration\Types\IShellConfiguration.cs" />
     <Compile Include="Logging\ILogger.cs" />
+    <Compile Include="Logging\LogLevel.cs" />
+    <Compile Include="Logging\LogLevels.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Shell\Command.cs" />
     <Compile Include="Shell\IShellCommand.cs" />
@@ -71,6 +80,7 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

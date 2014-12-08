@@ -39,6 +39,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Collections\EnumeratorFactory.cs" />
+    <Compile Include="Collections\GenericEnumerator.cs" />
     <Compile Include="Comparers\GenericComparer.cs" />
     <Compile Include="Text\FormatStringTokenParser.cs" />
     <Compile Include="Time\DateTimeExtensions.cs" />
