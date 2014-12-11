@@ -2,7 +2,7 @@
 {
     public interface IPathsConfiguration
     {
-        IPathConfiguration Plugins { get; set; }
-        IPathConfiguration LocalStorage { get; set; }
+        IPathConfiguration Plugins { get; }
+        IPathConfiguration LocalStorage { get; }
     }
 }

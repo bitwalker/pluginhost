@@ -8,7 +8,7 @@ namespace PluginHost.App.Configuration.Elements
     public class LoggingElement : ConfigurationElement, ILoggingConfiguration
     {
         [ConfigurationProperty("loggers")]
-        public LoggersElement Loggers
+        public ILoggersConfiguration Loggers
         {
             get { return this["loggers"] as LoggersElement; }
             set { this["loggers"] = value; }

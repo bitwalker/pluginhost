@@ -1,8 +1,10 @@
 ﻿using System.Configuration;
+using PluginHost.Interface.Configuration.Types;
 
 namespace PluginHost.App.Configuration
 {
     using PluginHost.Interface.Configuration;
+    using PluginHost.App.Configuration.Elements;
 
     public class Config : ConfigurationSection, IConfig
     {
@@ -24,17 +26,30 @@ namespace PluginHost.App.Configuration
         }
 
         [ConfigurationProperty("paths")]
-        public Elements.PathsElement Paths
+        public IPathsConfiguration Paths
         {
-            get { return this["paths"] as Elements.PathsElement; }
+            get { return this["paths"] as PathsElement; }
             set { this["paths"] = value; }
         }
 
         [ConfigurationProperty("logging")]
-        public Elements.LoggingElement Logging
+        public ILoggingConfiguration Logging
         {
-            get { return this["logging"] as Elements.LoggingElement; }
-            set { this["logging"] = value; }
+            get { return this["logging"] as LoggingElement; }
+            set
+            {
+                this["logging"] = value;
+            }
+        }
+
+        [ConfigurationProperty("shell")]
+        public IShellConfiguration Shell
+        {
+            get { return this["shell"] as ShellElement; }
+            set
+            {
+                (this["shell"] as ShellElement).Prompt = value.Prompt;
+            }
         }
     }
 }

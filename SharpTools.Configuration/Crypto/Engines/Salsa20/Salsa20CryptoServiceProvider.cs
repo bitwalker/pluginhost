@@ -1,0 +1,130 @@
+﻿using System;
+using System.Security.Cryptography;
+
+namespace SharpTools.Configuration.Crypto.Engines
+{
+    /// <summary>
+    /// Implements the Salsa20 stream encryption cipher, as defined at http://cr.yp.to/snuffle.html,
+    /// and is ported from the reference implementation by D. J. Bernstein, found at:
+    /// http://cr.yp.to/snuffle/salsa20/ref/salsa20.c
+    /// </summary>
+    public sealed class Salsa20CryptoServiceProvider : SymmetricAlgorithm
+    {
+        /// <summary>
+        /// Gets or sets the initialization vector (<see cref="SymmetricAlgorithm.IV"/>) for the symmetric algorithm.
+        /// </summary>
+        /// <value>The initialization vector.</value>
+        /// <exception cref="ArgumentNullException">An attempt was made to set the initialization vector to null. </exception>
+        /// <exception cref="CryptographicException">An attempt was made to set the initialization vector to an invalid size. </exception>
+        public override byte[] IV
+        {
+            get { return base.IV; }
+            set
+            {
+                AssertValidIV(value, "value");
+                IVValue = (byte[]) value.Clone();
+            }
+        }
+
+        private int _rounds;
+        /// <summary>
+        /// Gets or sets the number of rounds used by the Salsa20 algorithm.
+        /// </summary>
+        /// <value>The number of rounds.</value>
+        public int Rounds
+        {
+            get { return _rounds; }
+            set
+            {
+                if (value < 0 || value % 2 != 0)
+                    throw new ArgumentOutOfRangeException("value", "The number of rounds must be a postive, even integer");
+                _rounds = value;
+            }
+        }
+
+        public Salsa20CryptoServiceProvider()
+        {
+            LegalBlockSizesValue = new[] { new KeySizes(512, 512, 0) };
+            LegalKeySizesValue   = new[] { new KeySizes(128, 256, 128) };
+
+            BlockSizeValue = 512;
+            KeySizeValue   = 256;
+            _rounds       = 20;
+        }
+
+        /// <summary>
+        /// Creates a symmetric decryptor object with the specified <see cref="SymmetricAlgorithm.Key"/> property
+        /// and initialization vector (<see cref="SymmetricAlgorithm.IV"/>).
+        /// </summary>
+        /// <param name="rgbKey">The secret key to use for the symmetric algorithm.</param>
+        /// <param name="rgbIV">The initialization vector to use for the symmetric algorithm.</param>
+        /// <returns>A symmetric decryptor object.</returns>
+        public override ICryptoTransform CreateDecryptor(byte[] rgbKey, byte[] rgbIV)
+        {
+            // NOTE: decryption and encryption are symmetrical
+            return CreateEncryptor(rgbKey, rgbIV);
+        }
+
+        /// <summary>
+        /// Creates a symmetric encryptor object with the specified <see cref="SymmetricAlgorithm.Key"/> property
+        /// and initialization vector (<see cref="SymmetricAlgorithm.IV"/>).
+        /// </summary>
+        /// <param name="rgbKey">The secret key to use for the symmetric algorithm.</param>
+        /// <param name="rgbIV">The initialization vector to use for the symmetric algorithm.</param>
+        /// <returns>A symmetric encryptor object.</returns>
+        public override ICryptoTransform CreateEncryptor(byte[] rgbKey, byte[] rgbIV)
+        {
+            if (rgbKey == null)
+                throw new ArgumentNullException("rgbKey");
+            if (!ValidKeySize(rgbKey.Length * 8))
+                throw new CryptographicException("Invalid key size; it must be 128 or 256 bits.");
+            AssertValidIV(rgbIV, "rgbIV");
+
+            return new Salsa20CryptoTransform(rgbKey, rgbIV, _rounds);
+        }
+
+        /// <summary>
+        /// Generates a random initialization vector (<see cref="SymmetricAlgorithm.IV"/>) to use for the algorithm.
+        /// </summary>
+        public override void GenerateIV()
+        {
+            IVValue = GetRandomBytes(8);
+        }
+
+        /// <summary>
+        /// Generates a random key (<see cref="SymmetricAlgorithm.Key"/>) to use for the algorithm.
+        /// </summary>
+        public override void GenerateKey()
+        {
+            KeyValue = GetRandomBytes(KeySize / 8);
+        }
+
+        /// <summary>
+        /// Verifies that iv is a legal value for a Salsa20 IV.
+        /// </summary>
+        /// <param name="iv">The provided IV</param>
+        /// <param name="paramName">The name of the parameter being validated.</param>
+        private static void AssertValidIV(byte[] iv, string paramName)
+        {
+            if (iv == null)
+                throw new ArgumentNullException(paramName);
+            if (iv.Length != 8)
+                throw new CryptographicException("Invalid IV size; it must be 8 bytes.");
+        }
+
+        /// <summary>
+        /// Returns a new byte array containing the specified number of random bytes.
+        /// </summary>
+        /// <param name="byteCount">The length of the generated byte array</param>
+        /// <returns>byte[]</returns>
+        private static byte[] GetRandomBytes(int byteCount)
+        {
+            var bytes = new byte[byteCount];
+            using (var rng = new RNGCryptoServiceProvider())
+            {
+                rng.GetBytes(bytes);
+            }
+            return bytes;
+        }
+    }
+}

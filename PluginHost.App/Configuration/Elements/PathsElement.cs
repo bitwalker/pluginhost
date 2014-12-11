@@ -40,7 +40,7 @@ namespace PluginHost.App.Configuration.Elements
             }
         }
 
-        public new PathElement this[string name]
+        public new IPathConfiguration this[string name]
         {
             get { return (PathElement) base.BaseGet(name); }
         }
@@ -48,7 +48,7 @@ namespace PluginHost.App.Configuration.Elements
         /// <summary>
         /// Path where plugins are located.
         /// </summary>
-        public PathElement Plugins
+        public IPathConfiguration Plugins
         {
             get { return this["plugins"]; }
         }
@@ -56,7 +56,7 @@ namespace PluginHost.App.Configuration.Elements
         /// <summary>
         /// Path where locally stored files should be kept.
         /// </summary>
-        public PathElement LocalStorage
+        public IPathConfiguration LocalStorage
         {
             get { return this["localStorage"]; }
         }

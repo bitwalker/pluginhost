@@ -33,6 +33,7 @@ namespace PluginHost.App.Configuration.Elements
         public LogLevel LogLevel
         {
             get { return LogLevels.All[LogLevelName]; }
+            set { LogLevelName = value.Name.ToLowerInvariant(); }
         }
     }
 }

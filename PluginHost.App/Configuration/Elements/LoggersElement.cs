@@ -42,7 +42,7 @@ namespace PluginHost.App.Configuration.Elements
             }
         }
 
-        public new LoggerElement this[string name]
+        public new ILoggerConfiguration this[string name]
         {
             get { return (LoggerElement) base.BaseGet(name); }
         }
